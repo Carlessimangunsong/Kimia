@@ -1,1 +1,966 @@
-KIMIA OK..
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi Sel Volta Zn–Fe | Elektrokimia 3D Interaktif</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; user-select: none; }
+
+  body {
+    margin: 0; min-height: 100vh;
+    background: radial-gradient(ellipse at 30% 10%, #e8f4ff 0%, #b8d4ec 45%, #8fb8d8 100%);
+    display: flex; justify-content: center; align-items: center; padding: 18px;
+  }
+
+  .sim-container {
+    max-width: 1320px; width: 100%;
+    background: linear-gradient(160deg, #ffffff 0%, #f0f7fe 50%, #d9ecfb 100%);
+    border-radius: 44px;
+    box-shadow: 0 30px 60px -12px rgba(20, 50, 80, 0.55), 0 0 0 1px rgba(255,255,255,0.8) inset;
+    padding: 22px 26px 24px;
+  }
+
+  h1 {
+    margin: 0 0 2px 0; font-size: 1.85rem; font-weight: 800;
+    color: #0b2b42; letter-spacing: -0.6px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  h1 small {
+    font-size: 0.9rem; font-weight: 600; color: #216a9e;
+    background: linear-gradient(135deg, #e3f1ff, #c9e4fb);
+    padding: 5px 16px; border-radius: 40px;
+    box-shadow: 0 2px 6px rgba(30,90,150,0.2), inset 0 1px 2px #fff;
+  }
+
+  .subhead {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 6px 0 10px; padding: 0 4px; font-weight: 600; font-size: 0.9rem;
+  }
+  .badge {
+    background: linear-gradient(135deg, #ffffff, #e0f0ff);
+    padding: 6px 18px; border-radius: 30px; color: #12507e;
+    box-shadow: 0 3px 8px rgba(30,80,130,0.18), inset 0 1px 2px #fff;
+    border: 1px solid #b8daf5;
+  }
+
+  .canvas-wrapper {
+    position: relative; border-radius: 34px; padding: 8px;
+    background: linear-gradient(145deg, #ffffff, #cfe6f8);
+    box-shadow: inset 0 2px 6px rgba(255,255,255,0.9), 0 14px 28px -10px rgba(10,40,70,0.45);
+    margin-bottom: 14px;
+  }
+  canvas { display: block; width: 100%; height: auto; border-radius: 28px; cursor: pointer; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+    background: linear-gradient(135deg, #ffffffdd, #eaf6ffdd);
+    backdrop-filter: blur(10px);
+    padding: 10px 18px; border-radius: 70px;
+    box-shadow: 0 8px 20px -6px rgba(20,60,100,0.35), inset 0 1px 3px #fff;
+    margin-bottom: 14px; border: 1px solid #c6e2f8;
+  }
+
+  .btn {
+    border: none; color: white; font-weight: 700; padding: 9px 20px;
+    border-radius: 40px; font-size: 0.9rem; cursor: pointer;
+    transition: transform .1s, box-shadow .1s; letter-spacing: .3px;
+    display: flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.35);
+  }
+  .btn:active { transform: translateY(3px) scale(0.98); }
+  .btn.accent  { background: linear-gradient(145deg, #2fbf71, #1a8f4f); box-shadow: 0 4px 0 #0e5c31, 0 6px 14px rgba(20,140,70,0.4); }
+  .btn.warning { background: linear-gradient(145deg, #ffb347, #e8861f); box-shadow: 0 4px 0 #a35a10, 0 6px 14px rgba(230,140,30,0.4); }
+  .btn.secondary { background: linear-gradient(145deg, #5aa8e0, #2f7bb8); box-shadow: 0 4px 0 #1a4f7a, 0 6px 14px rgba(40,110,170,0.4); }
+  .btn:disabled { opacity: .45; pointer-events: none; filter: grayscale(.6); }
+
+  .speed-control {
+    display: flex; align-items: center; gap: 6px; margin-left: auto;
+    background: linear-gradient(135deg, #e5f3ff, #cfe8ff);
+    padding: 4px 10px; border-radius: 40px; border: 1px solid #b6d8f2;
+  }
+  .speed-control span { font-weight: 700; color: #0a3c61; font-size: .85rem; min-width: 42px; text-align: center; }
+  .btn-mini {
+    background: linear-gradient(145deg, #7fc1ef, #4d94cf); color: #fff;
+    border: none; width: 30px; height: 30px; border-radius: 50%;
+    font-size: 1.1rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 3px 0 #2a6492, 0 4px 8px rgba(30,90,140,0.35);
+  }
+  .btn-mini:active { transform: translateY(3px); box-shadow: 0 1px 0 #2a6492; }
+
+  .toggle-group { display: flex; gap: 14px; font-size: .82rem; font-weight: 700; color: #0e3d5c; }
+  .toggle-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .toggle-group input[type="checkbox"] { width: 17px; height: 17px; accent-color: #1f7fc0; cursor: pointer; }
+
+  .reaction-panel {
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px;
+    background: linear-gradient(135deg, #ffffffdd, #e9f5ffdd);
+    backdrop-filter: blur(8px); border-radius: 24px; padding: 14px 18px;
+    box-shadow: 0 10px 24px -10px rgba(20,60,100,0.4), inset 0 1px 3px #fff;
+    border: 1px solid #cbe4f7; font-size: .9rem;
+  }
+
+  .equation-box { display: flex; flex-direction: column; gap: 7px; font-family: 'Courier New', monospace; font-weight: 700; color: #072b40; }
+  .equation-box div {
+    background: linear-gradient(90deg, #eef7ff, #dcedff);
+    padding: 7px 16px; border-radius: 30px; width: fit-content;
+    border-left: 6px solid #2583c4; box-shadow: 0 2px 5px rgba(40,100,160,0.12);
+  }
+
+  .potensial-box {
+    background: linear-gradient(145deg, #e2f6ea, #c8eeda);
+    border-radius: 20px; padding: 10px 16px; display: flex; flex-direction: column;
+    justify-content: center; font-weight: 700; color: #0c4a2e;
+    box-shadow: inset 0 1px 4px #fff, 0 3px 10px rgba(20,110,60,0.15);
+    border: 1px solid #a8dfc0;
+  }
+  .volt-meter-display {
+    font-size: 1.7rem; font-weight: 900; color: #0f8a45;
+    text-shadow: 0 1px 0 #fff, 0 2px 8px rgba(20,160,80,0.35); letter-spacing: 1px;
+  }
+  .small-note { font-size: .72rem; color: #2c6a4a; font-weight: 600; }
+
+  .narration {
+    background: linear-gradient(135deg, #103048ee, #1c4f74ee);
+    backdrop-filter: blur(10px); color: #eaf6ff;
+    padding: 10px 20px; border-radius: 50px; margin-top: 12px;
+    font-size: .93rem; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 18px -6px rgba(0,20,40,0.6), inset 0 1px 2px rgba(255,255,255,0.25);
+    border-left: 8px solid #6fc3ff;
+  }
+  .narration i {
+    font-style: normal; background: linear-gradient(135deg, #6fc3ff, #2f8fd8);
+    color: #08202f; padding: 5px 14px; border-radius: 40px;
+    font-weight: 800; font-size: .76rem; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+
+  #infoPopup {
+    background: linear-gradient(135deg, #1b4b6e, #0f3350); color: #d8efff;
+    padding: 7px 16px; border-radius: 40px; font-size: .8rem; margin-left: 4px;
+    border: 1px solid #5aa0d0; max-width: 360px; transition: .2s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  @media (max-width: 900px) {
+    .reaction-panel { grid-template-columns: 1fr; }
+    .controls { border-radius: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="sim-container">
+  <h1>⚡ SIMULASI SEL VOLTA Zn–Fe
+    <small>Redoks · Aliran Elektron · Migrasi Ion</small>
+  </h1>
+  <div class="subhead">
+    <span class="badge">🔬 Notasi: Zn | Zn²⁺ || Fe²⁺ | Fe</span>
+    <span class="badge">E°sel = +0,32 V (Spontan)</span>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas id="voltaCanvas" width="1400" height="720"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="btn accent" id="startBtn">▶ MULAI</button>
+    <button class="btn warning" id="pauseBtn">⏸ JEDA</button>
+    <button class="btn secondary" id="resetBtn">↺ ULANGI</button>
+    <div class="speed-control">
+      <button class="btn-mini" id="speedDown">−</button>
+      <span id="speedLabel">1.0x</span>
+      <button class="btn-mini" id="speedUp">+</button>
+    </div>
+    <div class="toggle-group">
+      <label><input type="checkbox" id="showLabels" checked> Label Ion</label>
+      <label><input type="checkbox" id="showElectronArrow" checked> Panah e⁻</label>
+      <label><input type="checkbox" id="showEquations" checked> Persamaan</label>
+    </div>
+    <span id="infoPopup">Klik komponen untuk penjelasan</span>
+  </div>
+
+  <div class="reaction-panel">
+    <div class="equation-box" id="equationBox">
+      <div>Anode (Zn): Zn(s) → Zn²⁺(aq) + 2e⁻ &nbsp;<span style="color:#c24b12;">(oksidasi)</span></div>
+      <div>Katode (Fe): Fe²⁺(aq) + 2e⁻ → Fe(s) &nbsp;<span style="color:#0f8a45;">(reduksi)</span></div>
+      <div style="border-left-color:#0f8a45;">Total: Zn(s) + Fe²⁺(aq) → Zn²⁺(aq) + Fe(s)</div>
+    </div>
+    <div class="potensial-box">
+      <div style="font-size:.78rem;">E° Zn²⁺/Zn = −0,76 V &nbsp;|&nbsp; E° Fe²⁺/Fe = −0,44 V</div>
+      <div style="font-size:.78rem;">E°sel = E°katode − E°anode = (−0,44) − (−0,76)</div>
+      <div class="volt-meter-display">⚡ +0,32 V</div>
+      <div class="small-note">Reaksi berlangsung spontan pada kondisi standar</div>
+    </div>
+  </div>
+
+  <div class="narration" id="narrationBar">
+    <i>TAHAP 1</i>
+    <span id="narrationText">Oksidasi Zn di anode: atom Zn melepaskan 2 elektron dan berubah menjadi Zn²⁺.</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const canvas = document.getElementById('voltaCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // UI
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const speedDown = document.getElementById('speedDown');
+  const speedUp = document.getElementById('speedUp');
+  const speedLabel = document.getElementById('speedLabel');
+  const showLabels = document.getElementById('showLabels');
+  const showElectronArrow = document.getElementById('showElectronArrow');
+  const showEquations = document.getElementById('showEquations');
+  const infoPopup = document.getElementById('infoPopup');
+  const narrationText = document.getElementById('narrationText');
+  const narrationBar = document.getElementById('narrationBar');
+
+  // STATE
+  let animating = false, paused = false, speedFactor = 1.0;
+  let time = 0, lastTs = 0, raf = null;
+
+  let znIonCount = 9, feIonCount = 9;
+  const MAX_ION = 22, MIN_ION = 2;
+  let znMass = 1.0, feMass = 0.30;
+
+  let electrons = [];
+  const MAX_ELECTRONS = 16;
+
+  let bridgeIons = [];
+  const MAX_BRIDGE = 20;
+
+  let tick = 0; // untuk animasi gelombang/pulse
+
+  // ---------- RESET ----------
+  function resetSimulation() {
+    time = 0; znIonCount = 9; feIonCount = 9;
+    znMass = 1.0; feMass = 0.30;
+    electrons = []; bridgeIons = []; tick = 0;
+    animating = false; paused = false; speedFactor = 1.0;
+    speedLabel.textContent = '1.0x';
+    startBtn.disabled = false; pauseBtn.disabled = false;
+    pauseBtn.textContent = '⏸ JEDA';
+    narrationText.textContent = 'Oksidasi Zn di anode: atom Zn melepaskan 2 elektron dan berubah menjadi Zn²⁺.';
+    narrationBar.querySelector('i').textContent = 'TAHAP 1';
+    drawScene();
+  }
+
+  // ---------- ANIMATION LOOP ----------
+  function animate(ts) {
+    if (!animating || paused) { raf = null; return; }
+    if (!lastTs) lastTs = ts;
+    let dt = Math.min(0.05, (ts - lastTs) / 1000) * speedFactor;
+    lastTs = ts;
+    time += dt;
+    tick += dt * 60;
+
+    // Oksidasi Zn
+    if (znMass > 0.10) {
+      znMass = Math.max(0.10, znMass - 0.020 * dt);
+      znIonCount = Math.min(MAX_ION, znIonCount + (Math.random() < 0.6 * dt * 10 ? 1 : 0));
+      znMass = Math.max(0.10, 1 - (znIonCount - 9) * 0.028);
+    }
+    // Reduksi Fe
+    if (feIonCount > MIN_ION) {
+      feMass = Math.min(1.0, feMass + 0.016 * dt);
+      feIonCount = Math.max(MIN_ION, feIonCount - (Math.random() < 0.5 * dt * 10 ? 1 : 0));
+      feMass = Math.min(1.0, 0.30 + (9 - feIonCount) * 0.035);
+    }
+
+    // Elektron baru
+    if (electrons.length < MAX_ELECTRONS && Math.random() < 0.55 * dt * 10) {
+      electrons.push({ t: 0, speed: 0.20 + Math.random() * 0.18, phase: Math.random() * 6.28 });
+    }
+    for (let i = electrons.length - 1; i >= 0; i--) {
+      electrons[i].t += electrons[i].speed * dt;
+      if (electrons[i].t >= 1) electrons.splice(i, 1);
+    }
+
+    // Ion jembatan garam
+    if (bridgeIons.length < MAX_BRIDGE && Math.random() < 0.6 * dt * 10) {
+      bridgeIons.push({
+        type: Math.random() < 0.5 ? 'NO3' : 'K',
+        p: Math.random(),
+        speed: 0.09 + Math.random() * 0.08,
+        off: (Math.random() - 0.5) * 16
+      });
+    }
+    for (let i = bridgeIons.length - 1; i >= 0; i--) {
+      const b = bridgeIons[i];
+      b.p += (b.type === 'NO3' ? -1 : 1) * b.speed * dt;
+      if (b.p < -0.12 || b.p > 1.12) bridgeIons.splice(i, 1);
+    }
+
+    // Narasi dinamis
+    if (feIonCount <= 4) {
+      narrationText.textContent = 'Katode: Fe²⁺ menerima elektron dan mengendap sebagai Fe. Massa elektroda Fe bertambah.';
+      narrationBar.querySelector('i').textContent = 'TAHAP 3';
+    } else if (znIonCount >= 15) {
+      narrationText.textContent = 'Anode: Zn terus teroksidasi, konsentrasi Zn²⁺ meningkat. Elektroda Zn terkikis.';
+      narrationBar.querySelector('i').textContent = 'TAHAP 1';
+    } else if (electrons.length > 4) {
+      narrationText.textContent = 'Elektron mengalir dari Zn (anode) melalui kabel menuju Fe (katode).';
+      narrationBar.querySelector('i').textContent = 'TAHAP 2';
+    } else {
+      narrationText.textContent = 'Jembatan garam: NO₃⁻ menuju anode, K⁺ menuju katode untuk menjaga netralitas.';
+      narrationBar.querySelector('i').textContent = 'TAHAP 4';
+    }
+
+    drawScene();
+    raf = requestAnimationFrame(animate);
+  }
+
+  // ---------- DRAWING HELPERS ----------
+  function roundRect(x, y, w, h, r) {
+    if (w < 2*r) r = w/2;
+    if (h < 2*r) r = h/2;
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  // ========== MAIN SCENE ==========
+  function drawScene() {
+    // ---------- BACKGROUND LAB ----------
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#f2faff');
+    bg.addColorStop(0.5, '#dff0fb');
+    bg.addColorStop(1, '#b8d6ec');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Panel dinding halus
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.fillRect(0, 0, W, 190);
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
+    for (let i = 0; i < 10; i++) ctx.fillRect(i*150, 0, 74, 190);
+
+    // Meja lab
+    const tableGrad = ctx.createLinearGradient(0, H-90, 0, H);
+    tableGrad.addColorStop(0, '#9fbdd3');
+    tableGrad.addColorStop(0.4, '#7ea6c4');
+    tableGrad.addColorStop(1, '#5c85a5');
+    ctx.fillStyle = tableGrad;
+    ctx.fillRect(0, H-90, W, 90);
+
+    // Kilau meja
+    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.fillRect(0, H-90, W, 8);
+
+    // ============ BEAKERS ============
+    drawBeaker(200, 300, 240, 260, '#c9e9ff', 'ANODE (−)', 'ZnSO₄ 1 M');
+    drawBeaker(960, 300, 240, 260, '#c9e9ff', 'KATODE (+)', 'FeSO₄ 1 M');
+
+    // ---- Elektroda ----
+    drawMetalElectrode(320, 320, 46, 190, znMass, 'Zn', '#cfd6dd', '#8f9aa6', true);
+    drawMetalElectrode(1078, 320, 46, 190, feMass, 'Fe', '#c8d0d8', '#87929e', false);
+
+    // ---- Ion dalam larutan ----
+    drawIons(200, 300, 240, 260, znIonCount, '#9b7fc4', '#6b4f96', 'Zn²⁺', showLabels.checked);
+    drawIons(960, 300, 240, 260, feIonCount, '#7fc98f', '#3f9660', 'Fe²⁺', showLabels.checked);
+
+    // ============ SALT BRIDGE ============
+    drawSaltBridge();
+
+    // ============ WIRE & VOLTMETER ============
+    drawWireAndVoltmeter();
+
+    // ============ ELECTRONS ============
+    drawElectrons();
+
+    // ============ ARROW ============
+    if (showElectronArrow.checked) drawElectronArrow();
+
+    // ============ EQUATIONS ============
+    if (showEquations.checked) {
+      ctx.font = 'bold 19px "Courier New"';
+      ctx.fillStyle = '#0e3a55';
+      ctx.shadowColor = 'rgba(255,255,255,0.9)';
+      ctx.shadowBlur = 6;
+      ctx.fillText('Zn → Zn²⁺ + 2e⁻', 165, 610);
+      ctx.fillStyle = '#0f6b3a';
+      ctx.fillText('Fe²⁺ + 2e⁻ → Fe', 995, 610);
+      ctx.shadowBlur = 0;
+    }
+
+    // ============ LABEL JEMBATAN ============
+    ctx.font = 'bold 17px "Segoe UI"';
+    ctx.fillStyle = '#143c58';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 8;
+    ctx.fillText('JEMBATAN GARAM (KNO₃)', 560, 235);
+    ctx.shadowBlur = 0;
+
+    // keterangan arah ion jembatan
+    if (showLabels.checked) {
+      ctx.font = 'bold 14px "Segoe UI"';
+      ctx.fillStyle = '#c22f2f';
+      ctx.fillText('NO₃⁻ →', 440, 275);
+      ctx.fillStyle = '#b58900';
+      ctx.fillText('← K⁺', 890, 275);
+    }
+  }
+
+  // ===== BEAKER (3D GLASS) =====
+  function drawBeaker(x, y, w, h, liquidColor, title, subtitle) {
+    ctx.save();
+
+    // Bayangan meja
+    ctx.shadowColor = 'rgba(20,50,80,0.35)';
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    roundRect(x, y, w, h, 20);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Cairan
+    const lg = ctx.createLinearGradient(x, y+50, x, y+h);
+    lg.addColorStop(0, liquidColor + 'cc');
+    lg.addColorStop(0.7, liquidColor + '88');
+    lg.addColorStop(1, liquidColor + 'dd');
+    ctx.fillStyle = lg;
+    roundRect(x+6, y+55, w-12, h-70, 14);
+    ctx.fill();
+
+    // Permukaan cairan (elips)
+    ctx.beginPath();
+    ctx.ellipse(x+w/2, y+60, (w-20)/2, 12, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Kaca body
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 5;
+    roundRect(x, y, w, h, 20);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(150,190,220,0.8)';
+    ctx.lineWidth = 2;
+    roundRect(x+4, y+4, w-8, h-8, 17);
+    ctx.stroke();
+
+    // Kilau kaca vertikal
+    const shine = ctx.createLinearGradient(x, y, x+w, y+h);
+    shine.addColorStop(0, 'rgba(255,255,255,0.65)');
+    shine.addColorStop(0.15, 'rgba(255,255,255,0.0)');
+    shine.addColorStop(0.5, 'rgba(255,255,255,0.0)');
+    shine.addColorStop(0.85, 'rgba(255,255,255,0.0)');
+    shine.addColorStop(1, 'rgba(255,255,255,0.45)');
+    ctx.fillStyle = shine;
+    roundRect(x, y, w, h, 20);
+    ctx.fill();
+
+    // Tutup atas
+    ctx.beginPath();
+    ctx.ellipse(x+w/2, y, (w-16)/2, 12, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Label
+    ctx.font = 'bold 22px "Segoe UI"';
+    ctx.fillStyle = '#0d2b40';
+    ctx.shadowColor = 'rgba(255,255,255,1)';
+    ctx.shadowBlur = 10;
+    ctx.fillText(title, x + 16, y - 22);
+    ctx.font = 'bold 15px "Segoe UI"';
+    ctx.fillStyle = '#1f5273';
+    ctx.fillText(subtitle, x + 20, y + 36);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  // ===== ELEKTRODA LOGAM (3D) =====
+  function drawMetalElectrode(x, y, w, h, massPct, label, colorLight, colorDark, isAnode) {
+    const visibleH = h * (0.45 + massPct * 0.55);
+    const yPos = y + (h - visibleH);
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(20,40,60,0.5)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 8;
+
+    const grad = ctx.createLinearGradient(x, yPos, x+w, yPos);
+    grad.addColorStop(0, colorDark);
+    grad.addColorStop(0.25, colorLight);
+    grad.addColorStop(0.55, '#ffffff');
+    grad.addColorStop(0.75, colorLight);
+    grad.addColorStop(1, colorDark);
+
+    ctx.fillStyle = grad;
+    roundRect(x, yPos, w, visibleH, 6);
+    ctx.fill();
+
+    // Kilau highlight
+    ctx.shadowColor = 'transparent';
+    const shine = ctx.createLinearGradient(x, yPos, x+w, yPos);
+    shine.addColorStop(0, 'rgba(255,255,255,0)');
+    shine.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+    shine.addColorStop(0.5, 'rgba(255,255,255,0.85)');
+    shine.addColorStop(0.6, 'rgba(255,255,255,0.6)');
+    shine.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = shine;
+    roundRect(x, yPos, w, visibleH, 6);
+    ctx.fill();
+
+    // Garis tekstur logam
+    ctx.strokeStyle = 'rgba(80,100,120,0.25)';
+    ctx.lineWidth = 1;
+    for (let i = 6; i < visibleH; i += 14) {
+      ctx.beginPath();
+      ctx.moveTo(x+4, yPos+i);
+      ctx.lineTo(x+w-4, yPos+i);
+      ctx.stroke();
+    }
+
+    // Batas bawah elemen
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, yPos+visibleH);
+    ctx.lineTo(x+w, yPos+visibleH);
+    ctx.stroke();
+
+    // Efek korosi (Zn terkikis)
+    if (isAnode) {
+      for (let i = 0; i < 6; i++) {
+        const cx = x + 6 + (i*17 + tick*0.4) % (w-10);
+        const cy = yPos + 8 + (i*29 + Math.sin(tick*0.1 + i)*6) % (visibleH-14);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3 + (i%2)*1.4, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(140,120,90,0.45)';
+        ctx.fill();
+      }
+    } else {
+      // Efek deposit Fe baru (lapisan mengkilap)
+      for (let i = 0; i < 7; i++) {
+        const cx = x + 8 + (i*19 + tick*0.3) % (w-16);
+        const cy = yPos + 10 + (i*31 + Math.cos(tick*0.09 + i)*7) % (visibleH-20);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.4 + (i%3)*1.2, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(240,245,255,0.6)';
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+
+    // Label logam
+    ctx.font = 'bold 20px "Segoe UI"';
+    ctx.fillStyle = '#0e2b40';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.fillText(label, x + 5, y - 8);
+    ctx.shadowBlur = 0;
+  }
+
+  // ===== ION DI LARUTAN =====
+  function drawIons(x, y, w, h, count, fillColor, edgeColor, label, showLbl) {
+    const cx = x + w/2, cy = y + h/2 + 40;
+    for (let i = 0; i < count; i++) {
+      const ang = i * 2.399963 + tick * 0.004;
+      const rad = 24 + (i * 7.3) % 72;
+      const px = cx + Math.cos(ang) * rad * 1.15;
+      const py = cy + Math.sin(ang) * rad * 0.65;
+
+      // posisi dengan batas
+      if (px < x+24 || px > x+w-24 || py < y+70 || py > y+h-24) continue;
+
+      // Bayangan ion
+      ctx.beginPath();
+      ctx.arc(px+2, py+3, 11, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,20,40,0.18)';
+      ctx.fill();
+
+      // Ion glow
+      const g = ctx.createRadialGradient(px-3, py-3, 2, px, py, 14);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.35, fillColor);
+      g.addColorStop(1, edgeColor);
+      ctx.beginPath();
+      ctx.arc(px, py, 11, 0, Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.shadowColor = fillColor + 'aa';
+      ctx.shadowBlur = 14;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Outline
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (showLbl) {
+        ctx.font = 'bold 10px "Segoe UI"';
+        ctx.fillStyle = '#1a2a38';
+        ctx.fillText(label, px-13, py+4);
+      }
+    }
+  }
+
+  // ===== SALT BRIDGE (3D TABUNG U) =====
+  function drawSaltBridge() {
+    const p1 = {x: 440, y: 430};
+    const p2 = {x: 960, y: 430};
+    const cp = {x: 700, y: 250};
+
+    ctx.save();
+
+    // Bayangan tabung
+    ctx.shadowColor = 'rgba(20,50,80,0.35)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 8;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.quadraticCurveTo(cp.x, cp.y, p2.x, p2.y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 34;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Dinding kaca luar
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.quadraticCurveTo(cp.x, cp.y, p2.x, p2.y);
+    ctx.strokeStyle = 'rgba(200,225,245,0.85)';
+    ctx.lineWidth = 34;
+    ctx.stroke();
+
+    // Cairan dalam tabung
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.quadraticCurveTo(cp.x, cp.y, p2.x, p2.y);
+    ctx.strokeStyle = 'rgba(230,248,255,0.95)';
+    ctx.lineWidth = 24;
+    ctx.stroke();
+
+    // Highlight kaca
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y-6);
+    ctx.quadraticCurveTo(cp.x, cp.y-6, p2.x, p2.y-6);
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Ujung tabung (mulut)
+    [p1, p2].forEach(p => {
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, 22, 12, 0, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(240,250,255,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(180,210,235,0.9)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    });
+
+    // Ion dalam jembatan
+    bridgeIons.forEach(b => {
+      const t = Math.max(0, Math.min(1, b.p));
+      const x = (1-t)*(1-t)*p1.x + 2*(1-t)*t*cp.x + t*t*p2.x;
+      const y = (1-t)*(1-t)*p1.y + 2*(1-t)*t*cp.y + t*t*p2.y;
+
+      const isK = b.type === 'K';
+      const fill = isK ? '#ffd93b' : '#ff5c5c';
+      const edge = isK ? '#c99b00' : '#c22b2b';
+
+      // glow
+      ctx.beginPath();
+      ctx.arc(x, y + b.off, 12, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fill();
+
+      const g = ctx.createRadialGradient(x-3, y-3+b.off, 1, x, y+b.off, 10);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.4, fill);
+      g.addColorStop(1, edge);
+      ctx.beginPath();
+      ctx.arc(x, y + b.off, 8, 0, Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.shadowColor = fill + 'cc';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      if (showLabels.checked) {
+        ctx.font = 'bold 10px "Segoe UI"';
+        ctx.fillStyle = '#0a1e2b';
+        ctx.fillText(isK ? 'K⁺' : 'NO₃⁻', x+9, y+3+b.off);
+      }
+    });
+
+    ctx.restore();
+  }
+
+  // ===== KABEL + VOLTMETER =====
+  function drawWireAndVoltmeter() {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,20,40,0.45)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 5;
+
+    // Kabel kiri
+    ctx.beginPath();
+    ctx.moveTo(343, 320);
+    ctx.lineTo(343, 160);
+    ctx.lineTo(620, 160);
+    ctx.strokeStyle = '#3b4d5e';
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Kabel kanan
+    ctx.beginPath();
+    ctx.moveTo(1101, 320);
+    ctx.lineTo(1101, 160);
+    ctx.lineTo(800, 160);
+    ctx.stroke();
+
+    // Kilau kabel
+    ctx.shadowColor = 'transparent';
+    ctx.beginPath();
+    ctx.moveTo(343, 320);
+    ctx.lineTo(343, 160);
+    ctx.lineTo(620, 160);
+    ctx.strokeStyle = 'rgba(200,225,255,0.4)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(1101, 320);
+    ctx.lineTo(1101, 160);
+    ctx.lineTo(800, 160);
+    ctx.stroke();
+
+    // Voltmeter body
+    ctx.beginPath();
+    ctx.ellipse(710, 160, 78, 54, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#0e2a3d';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Bezel
+    ctx.beginPath();
+    ctx.ellipse(710, 160, 68, 46, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(160,200,235,0.9)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Layar
+    const screenGrad = ctx.createRadialGradient(700, 150, 5, 710, 160, 58);
+    screenGrad.addColorStop(0, '#f4fff9');
+    screenGrad.addColorStop(1, '#b7ecc8');
+    ctx.beginPath();
+    ctx.ellipse(710, 160, 56, 36, 0, 0, Math.PI*2);
+    ctx.fillStyle = screenGrad;
+    ctx.fill();
+
+    // Teks voltmeter
+    ctx.font = 'bold 22px "Courier New"';
+    ctx.fillStyle = '#0c6b3a';
+    ctx.shadowColor = 'rgba(0,100,30,0.3)';
+    ctx.shadowBlur = 6;
+    ctx.textAlign = 'center';
+    ctx.fillText('+0.32 V', 710, 168);
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+
+    // Terminal label + / -
+    ctx.font = 'bold 18px "Segoe UI"';
+    ctx.fillStyle = '#ffdd77';
+    ctx.fillText('+', 770, 190);
+    ctx.fillStyle = '#88ddff';
+    ctx.fillText('−', 642, 190);
+
+    ctx.restore();
+  }
+
+  // ===== ELEKTRON =====
+  function drawElectrons() {
+    electrons.forEach(e => {
+      const t = e.t;
+      let x, y;
+      const seg1 = {x1: 343, y1: 320, x2: 343, y2: 160};
+      const seg2 = {x1: 343, y1: 160, x2: 800, y2: 160};
+      const seg3 = {x1: 800, y1: 160, x2: 1101, y2: 160};
+      const seg4 = {x1: 1101, y1: 160, x2: 1101, y2: 320};
+
+      if (t < 0.12) {
+        const lt = t / 0.12;
+        x = seg1.x1; y = seg1.y1 + (seg1.y2 - seg1.y1) * lt;
+      } else if (t < 0.42) {
+        const lt = (t - 0.12) / 0.30;
+        x = seg2.x1 + (seg2.x2 - seg2.x1) * lt; y = 160;
+      } else if (t < 0.58) {
+        const lt = (t - 0.42) / 0.16;
+        x = seg3.x1 + (seg3.x2 - seg3.x1) * lt; y = 160;
+      } else {
+        const lt = (t - 0.58) / 0.42;
+        x = seg4.x1; y = seg4.y1 + (seg4.y2 - seg4.y1) * lt;
+      }
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(80,180,255,0.25)';
+      ctx.fill();
+
+      // Bola elektron
+      const g = ctx.createRadialGradient(x-3, y-3, 1, x, y, 9);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.35, '#63c8ff');
+      g.addColorStop(1, '#1565c0');
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.shadowColor = '#3aa0ff';
+      ctx.shadowBlur = 16;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Simbol e-
+      ctx.font = 'bold 9px monospace';
+      ctx.fillStyle = '#0a2a50';
+      ctx.textAlign = 'center';
+      ctx.fillText('e⁻', x, y+3);
+      ctx.textAlign = 'left';
+    });
+  }
+
+  // ===== PANAH ELEKTRON =====
+  function drawElectronArrow() {
+    ctx.save();
+    const y = 128;
+    const x1 = 390, x2 = 1030;
+
+    // Garis dash
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.strokeStyle = 'rgba(30,140,255,0.75)';
+    ctx.lineWidth = 6;
+    ctx.setLineDash([16, 12]);
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Panah ujung
+    ctx.beginPath();
+    ctx.moveTo(x2-22, y-14);
+    ctx.lineTo(x2, y);
+    ctx.lineTo(x2-22, y+14);
+    ctx.closePath();
+    ctx.fillStyle = '#1e8cff';
+    ctx.shadowColor = '#1e8cff';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+
+    // Label
+    ctx.font = 'bold 18px "Segoe UI"';
+    ctx.fillStyle = '#0a5fbf';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 8;
+    ctx.textAlign = 'center';
+    ctx.fillText('ALIRAN ELEKTRON →', (x1+x2)/2, y - 22);
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // ===== EVENTS =====
+  startBtn.addEventListener('click', () => {
+    if (!animating || paused) {
+      animating = true; paused = false;
+      lastTs = 0;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      infoPopup.textContent = 'Simulasi berjalan...';
+    }
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if (animating && !paused) {
+      paused = true;
+      infoPopup.textContent = 'Animasi dijeda';
+      pauseBtn.textContent = '▶ LANJUT';
+    } else if (paused) {
+      paused = false; lastTs = 0;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+      pauseBtn.textContent = '⏸ JEDA';
+      infoPopup.textContent = 'Melanjutkan animasi...';
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    resetSimulation();
+    infoPopup.textContent = 'Simulasi diulang';
+  });
+
+  speedUp.addEventListener('click', () => {
+    speedFactor = Math.min(3.0, +(speedFactor + 0.3).toFixed(1));
+    speedLabel.textContent = speedFactor.toFixed(1) + 'x';
+  });
+
+  speedDown.addEventListener('click', () => {
+    speedFactor = Math.max(0.3, +(speedFactor - 0.3).toFixed(1));
+    speedLabel.textContent = speedFactor.toFixed(1) + 'x';
+  });
+
+  showLabels.addEventListener('change', drawScene);
+  showElectronArrow.addEventListener('change', drawScene);
+  showEquations.addEventListener('change', drawScene);
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    if (mx < 460 && my > 300 && my < 580)
+      infoPopup.textContent = 'ANODE (Zn): oksidasi Zn → Zn²⁺ + 2e⁻. Massa elektroda berkurang.';
+    else if (mx > 940 && my > 300 && my < 580)
+      infoPopup.textContent = 'KATODE (Fe): reduksi Fe²⁺ + 2e⁻ → Fe. Massa elektroda bertambah.';
+    else if (mx > 420 && mx < 980 && my > 220 && my < 460)
+      infoPopup.textContent = 'JEMBATAN GARAM KNO₃: NO₃⁻ → anode, K⁺ → katode, menjaga netralitas muatan.';
+    else if (mx > 620 && mx < 800 && my > 90 && my < 220)
+      infoPopup.textContent = 'VOLTMETER: beda potensial sel E°sel = +0,32 V (reaksi spontan).';
+    else if (my > 560 && mx > 100 && mx < 1300)
+      infoPopup.textContent = 'Reaksi total: Zn(s) + Fe²⁺(aq) → Zn²⁺(aq) + Fe(s)';
+    else
+      infoPopup.textContent = 'Klik komponen untuk penjelasan';
+  });
+
+  // INIT
+  resetSimulation();
+  drawScene();
+})();
+</script>
+</body>
+</html>
