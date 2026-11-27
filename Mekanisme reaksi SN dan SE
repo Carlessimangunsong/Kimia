@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mekanisme Substitusi Organik: SE1 · SE2 · SN1 · SN2 | Simulasi 3D Interaktif</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; user-select: none; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: radial-gradient(ellipse at 30% 10%, #eef7ff 0%, #c4dcf0 45%, #8fb8d8 100%);
+    display: flex; justify-content: center; align-items: center; padding: 16px;
+  }
+  .app {
+    max-width: 1400px; width: 100%;
+    background: linear-gradient(160deg, #ffffff 0%, #f0f7fe 50%, #d9ecfb 100%);
+    border-radius: 44px;
+    box-shadow: 0 30px 60px -12px rgba(20, 50, 80, 0.55), 0 0 0 1px rgba(255,255,255,0.8) inset;
+    padding: 20px 24px 22px;
+  }
+  h1 {
+    margin: 0 0 2px 0; font-size: 1.7rem; font-weight: 800;
+    color: #0b2b42; letter-spacing: -0.6px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  h1 small {
+    font-size: 0.85rem; font-weight: 600; color: #216a9e;
+    background: linear-gradient(135deg, #e3f1ff, #c9e4fb);
+    padding: 5px 14px; border-radius: 40px;
+    box-shadow: 0 2px 6px rgba(30,90,150,0.2), inset 0 1px 2px #fff;
+  }
+  .subhead {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 4px 0 10px; padding: 0 4px; font-weight: 600; font-size: 0.88rem; flex-wrap: wrap; gap: 8px;
+  }
+  .badge {
+    background: linear-gradient(135deg, #ffffff, #e0f0ff);
+    padding: 5px 16px; border-radius: 30px; color: #12507e;
+    box-shadow: 0 3px 8px rgba(30,80,130,0.18), inset 0 1px 2px #fff;
+    border: 1px solid #b8daf5;
+  }
+  .canvas-wrapper {
+    position: relative; border-radius: 34px; padding: 8px;
+    background: linear-gradient(145deg, #ffffff, #cfe6f8);
+    box-shadow: inset 0 2px 6px rgba(255,255,255,0.9), 0 14px 28px -10px rgba(10,40,70,0.45);
+    margin-bottom: 12px;
+  }
+  canvas { display: block; width: 100%; height: auto; border-radius: 28px; cursor: pointer; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+    background: linear-gradient(135deg, #ffffffdd, #eaf6ffdd);
+    backdrop-filter: blur(10px);
+    padding: 10px 16px; border-radius: 70px;
+    box-shadow: 0 8px 20px -6px rgba(20,60,100,0.35), inset 0 1px 3px #fff;
+    margin-bottom: 12px; border: 1px solid #c6e2f8;
+  }
+  .btn {
+    border: none; color: white; font-weight: 700; padding: 8px 16px;
+    border-radius: 40px; font-size: 0.85rem; cursor: pointer;
+    transition: transform .1s, box-shadow .1s; letter-spacing: .3px;
+    display: flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.35);
+  }
+  .btn:active { transform: translateY(3px) scale(0.98); }
+  .btn.accent  { background: linear-gradient(145deg, #2fbf71, #1a8f4f); box-shadow: 0 4px 0 #0e5c31, 0 6px 14px rgba(20,140,70,0.4); }
+  .btn.warning { background: linear-gradient(145deg, #ffb347, #e8861f); box-shadow: 0 4px 0 #a35a10, 0 6px 14px rgba(230,140,30,0.4); }
+  .btn.secondary { background: linear-gradient(145deg, #5aa8e0, #2f7bb8); box-shadow: 0 4px 0 #1a4f7a, 0 6px 14px rgba(40,110,170,0.4); }
+  .btn.purple { background: linear-gradient(145deg, #a37fe0, #6f4fb8); box-shadow: 0 4px 0 #3f2a7a, 0 6px 14px rgba(100,60,180,0.4); }
+  .btn:disabled { opacity: .45; pointer-events: none; filter: grayscale(.6); }
+
+  .mode-selector {
+    display: flex; gap: 4px; background: #d7e9fb; padding: 4px; border-radius: 40px;
+    border: 1px solid #b6d8f2;
+  }
+  .mode-btn {
+    border: none; background: transparent; font-weight: 700; font-size: 0.78rem;
+    padding: 6px 14px; border-radius: 40px; cursor: pointer; color: #1b4b6e;
+    transition: .15s;
+  }
+  .mode-btn.active { background: linear-gradient(145deg, #4a9ee0, #2a7bb8); color: white; box-shadow: 0 2px 6px rgba(30,90,150,0.4); }
+  .mode-btn:not(.active):hover { background: #ffffff88; }
+
+  .speed-control {
+    display: flex; align-items: center; gap: 6px; margin-left: auto;
+    background: linear-gradient(135deg, #e5f3ff, #cfe8ff);
+    padding: 4px 10px; border-radius: 40px; border: 1px solid #b6d8f2;
+  }
+  .speed-control span { font-weight: 700; color: #0a3c61; font-size: .82rem; min-width: 42px; text-align: center; }
+  .btn-mini {
+    background: linear-gradient(145deg, #7fc1ef, #4d94cf); color: #fff;
+    border: none; width: 28px; height: 28px; border-radius: 50%;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 3px 0 #2a6492, 0 4px 8px rgba(30,90,140,0.35);
+  }
+  .btn-mini:active { transform: translateY(3px); box-shadow: 0 1px 0 #2a6492; }
+
+  .panel {
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px;
+    background: linear-gradient(135deg, #ffffffdd, #e9f5ffdd);
+    backdrop-filter: blur(8px); border-radius: 24px; padding: 12px 16px;
+    box-shadow: 0 10px 24px -10px rgba(20,60,100,0.4), inset 0 1px 3px #fff;
+    border: 1px solid #cbe4f7; font-size: .88rem;
+  }
+  .step-box {
+    font-weight: 700; color: #072b40; display: flex; flex-direction: column; gap: 6px;
+  }
+  .step-box .stage {
+    background: linear-gradient(90deg, #eef7ff, #dcedff);
+    padding: 8px 14px; border-radius: 30px; width: fit-content;
+    border-left: 6px solid #2583c4; box-shadow: 0 2px 5px rgba(40,100,160,0.12);
+    font-family: 'Courier New', monospace;
+  }
+  .info-box {
+    background: linear-gradient(145deg, #e2f6ea, #c8eeda);
+    border-radius: 20px; padding: 8px 14px; display: flex; flex-direction: column;
+    justify-content: center; font-weight: 700; color: #0c4a2e;
+    box-shadow: inset 0 1px 4px #fff, 0 3px 10px rgba(20,110,60,0.15);
+    border: 1px solid #a8dfc0; font-size: .8rem;
+  }
+  .narration {
+    background: linear-gradient(135deg, #103048ee, #1c4f74ee);
+    backdrop-filter: blur(10px); color: #eaf6ff;
+    padding: 10px 18px; border-radius: 50px; margin-top: 10px;
+    font-size: .9rem; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 18px -6px rgba(0,20,40,0.6), inset 0 1px 2px rgba(255,255,255,0.25);
+    border-left: 8px solid #6fc3ff; min-height: 50px;
+  }
+  .narration i {
+    font-style: normal; background: linear-gradient(135deg, #6fc3ff, #2f8fd8);
+    color: #08202f; padding: 5px 14px; border-radius: 40px;
+    font-weight: 800; font-size: .76rem; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  #infoPopup {
+    background: linear-gradient(135deg, #1b4b6e, #0f3350); color: #d8efff;
+    padding: 7px 14px; border-radius: 40px; font-size: .78rem; margin-left: 4px;
+    border: 1px solid #5aa0d0; transition: .2s; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 340px;
+  }
+  .atom-info {
+    background: #ffffffcc; border-radius: 20px; padding: 8px 14px;
+    font-size: .8rem; color: #0e3a55; border: 1px solid #b8daf5;
+    margin-top: 6px; min-height: 42px; display: flex; align-items: center;
+  }
+  @media (max-width: 900px) { .panel { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🧪 Mekanisme Substitusi Organik
+    <small>SE1 · SE2 · SN1 · SN2 — Simulasi Molekuler 3D Interaktif</small>
+  </h1>
+  <div class="subhead">
+    <span class="badge">🔬 Visualisasi Atom, Ikatan, Elektron & Panah Mekanisme</span>
+    <span class="badge">🎯 Untuk Pemula Kimia Organik</span>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas id="molCanvas" width="1400" height="700"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mech="sn1">SN1</button>
+      <button class="mode-btn" data-mech="sn2">SN2</button>
+      <button class="mode-btn" data-mech="se1">SE1</button>
+      <button class="mode-btn" data-mech="se2">SE2</button>
+    </div>
+    <button class="btn accent" id="startBtn">▶ MULAI</button>
+    <button class="btn warning" id="pauseBtn">⏸ JEDA</button>
+    <button class="btn secondary" id="resetBtn">↺ ULANGI</button>
+    <button class="btn purple" id="stepBack">◀ TAHAP</button>
+    <button class="btn purple" id="stepFwd">TAHAP ▶</button>
+    <div class="speed-control">
+      <button class="btn-mini" id="speedDown">−</button>
+      <span id="speedLabel">1.0x</span>
+      <button class="btn-mini" id="speedUp">+</button>
+    </div>
+    <span id="infoPopup">Klik atom/ikatan untuk info</span>
+  </div>
+
+  <div class="panel">
+    <div class="step-box">
+      <div class="stage" id="stageLabel">TAHAP 1 — Pelepasan gugus pergi</div>
+      <div style="font-size:.78rem; color:#2c5570;" id="mechDesc">
+        SN1: Substrat terionisasi membentuk karbokation (tahap lambat).
+      </div>
+    </div>
+    <div class="info-box">
+      <div id="mechStatus">Mekanisme: SN1 (bertahap)</div>
+      <div style="font-size:.75rem; font-weight:600; color:#1a6b4a;" id="energyInfo">ΔG‡ tinggi · intermediat karbokation</div>
+      <div class="atom-info" id="atomInfo">Klik atom untuk melihat detail elektron & muatan.</div>
+    </div>
+  </div>
+
+  <div class="narration" id="narrationBar">
+    <i>TAHAP 1</i>
+    <span id="narrationText">Pelepasan gugus pergi: ikatan C–Br terputus, elektron ikatan menuju Br membentuk Br⁻ dan karbokation.</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const canvas = document.getElementById('molCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const stepBack = document.getElementById('stepBack');
+  const stepFwd = document.getElementById('stepFwd');
+  const speedUp = document.getElementById('speedUp');
+  const speedDown = document.getElementById('speedDown');
+  const speedLabel = document.getElementById('speedLabel');
+  const stageLabel = document.getElementById('stageLabel');
+  const mechDesc = document.getElementById('mechDesc');
+  const mechStatus = document.getElementById('mechStatus');
+  const energyInfo = document.getElementById('energyInfo');
+  const atomInfo = document.getElementById('atomInfo');
+  const narrationText = document.getElementById('narrationText');
+  const narrationBar = document.getElementById('narrationBar');
+  const infoPopup = document.getElementById('infoPopup');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+
+  let currentMech = 'sn1';
+  let animating = false, paused = false, speedFactor = 1.0;
+  let lastTs = 0, raf = null;
+  let tick = 0;
+  let stage = 0;
+  let stageProgress = 0;
+  const STAGE_DURATION = 3.0;
+
+  let atoms = [], bonds = [], arrows = [], charges = [];
+  let stages = [];
+
+  function roundRect(x, y, w, h, r) {
+    if (w < 2*r) r = w/2; if (h < 2*r) r = h/2;
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  const ATOM_COLORS = {
+    C: { fill: '#3a3a3a', light: '#6a6a6a', edge: '#1a1a1a' },
+    H: { fill: '#f5f5f5', light: '#ffffff', edge: '#c0c0c0' },
+    O: { fill: '#e63946', light: '#ff6b6b', edge: '#a4161a' },
+    N: { fill: '#3a86ff', light: '#6ba8ff', edge: '#1d4f9e' },
+    Br: { fill: '#a0522d', light: '#c97a4a', edge: '#6b3516' },
+    Cl: { fill: '#3cb371', light: '#6ee7a0', edge: '#1e7a4a' },
+    Mg: { fill: '#9370db', light: '#b8a0f0', edge: '#5c3f9e' },
+    I: { fill: '#8a2be2', light: '#b06bff', edge: '#5a1a9e' },
+    F: { fill: '#7fffd4', light: '#b0ffe0', edge: '#3ecfa0' }
+  };
+
+  function atomRadius(el) {
+    const R = { C: 20, H: 11, O: 18, N: 18, Br: 24, Cl: 22, Mg: 24, I: 26, F: 16 };
+    return R[el] || 16;
+  }
+
+  function getMechData(mech) {
+    if (mech === 'sn1') return sn1Data();
+    if (mech === 'sn2') return sn2Data();
+    if (mech === 'se1') return se1Data();
+    if (mech === 'se2') return se2Data();
+  }
+
+  function sn1Data() {
+    const C0 = { x: 700, y: 350 };
+    const Br0 = { x: 830, y: 350 };
+    const CH3 = [{ x: 620, y: 260 }, { x: 570, y: 380 }, { x: 630, y: 460 }];
+    const H2O0 = { O: { x: 280, y: 350 }, H1: { x: 220, y: 310 }, H2: { x: 220, y: 390 } };
+
+    return [
+      {
+        label: 'TAHAP 1 — Reaktan: (CH₃)₃C–Br + H₂O',
+        narr: 'Tert-butil bromida memiliki ikatan C–Br polar. Br lebih elektronegatif sehingga C bermuatan parsial positif (δ+).',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Br', el:'Br', x: Br0.x, y: Br0.y, charge: 0 },
+          ...CH3.map((p,i) => ({ id:'CH3'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'CH₃' })),
+          { id:'O', el:'O', x: H2O0.O.x, y: H2O0.O.y, charge: 0, lp: 2 },
+          { id:'H1', el:'H', x: H2O0.H1.x, y: H2O0.H1.y, charge: 0 },
+          { id:'H2', el:'H', x: H2O0.H2.x, y: H2O0.H2.y, charge: 0 }
+        ],
+        bonds: [
+          { a:'C', b:'Br', type:'single' },
+          ...CH3.map((_,i) => ({ a:'C', b:'CH3'+i, type:'single' }))
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 3 }, { id:'O', count: 2 }]
+      },
+      {
+        label: 'TAHAP 1 — Ionisasi: pembentukan karbokation',
+        narr: 'Ikatan C–Br terputus secara heterolitik. Kedua elektron ikatan menuju Br, menghasilkan Br⁻ dan karbokation tert-butil (tahap penentu laju).',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: +1 },
+          { id:'Br', el:'Br', x: 900, y: 350, charge: -1, lp: 4 },
+          ...CH3.map((p,i) => ({ id:'CH3'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'CH₃' })),
+          { id:'O', el:'O', x: H2O0.O.x, y: H2O0.O.y, charge: 0, lp: 2 },
+          { id:'H1', el:'H', x: H2O0.H1.x, y: H2O0.H1.y, charge: 0 },
+          { id:'H2', el:'H', x: H2O0.H2.x, y: H2O0.H2.y, charge: 0 }
+        ],
+        bonds: [...CH3.map((_,i) => ({ a:'C', b:'CH3'+i, type:'single' }))],
+        arrows: [{ from:'C-Br', to:'Br', kind:'pair' }],
+        lp: [{ id:'Br', count: 4 }, { id:'O', count: 2 }]
+      },
+      {
+        label: 'TAHAP 2 — Serangan nukleofil H₂O',
+        narr: 'Pasangan elektron bebas oksigen H₂O menyerang karbon karbokation yang kekurangan elektron. Terbentuk ion oksonium.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Br', el:'Br', x: 960, y: 350, charge: -1, lp: 4 },
+          ...CH3.map((p,i) => ({ id:'CH3'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'CH₃' })),
+          { id:'O', el:'O', x: 560, y: 350, charge: +1, lp: 1 },
+          { id:'H1', el:'H', x: 500, y: 300, charge: 0 },
+          { id:'H2', el:'H', x: 500, y: 400, charge: 0 }
+        ],
+        bonds: [
+          ...CH3.map((_,i) => ({ a:'C', b:'CH3'+i, type:'single' })),
+          { a:'C', b:'O', type:'single' }
+        ],
+        arrows: [{ from:'O', to:'C', kind:'pair' }],
+        lp: [{ id:'Br', count: 4 }, { id:'O', count: 1 }]
+      },
+      {
+        label: 'TAHAP 3 — Deprotonasi: pembentukan tert-butanol',
+        narr: 'Molekul air lain (basa) mengambil proton dari ion oksonium. Terbentuk tert-butanol dan ion hidronium (H₃O⁺).',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Br', el:'Br', x: 960, y: 350, charge: -1, lp: 4 },
+          ...CH3.map((p,i) => ({ id:'CH3'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'CH₃' })),
+          { id:'O', el:'O', x: 560, y: 350, charge: 0, lp: 2 },
+          { id:'H1', el:'H', x: 500, y: 300, charge: 0 },
+          { id:'H2', el:'H', x: 500, y: 400, charge: 0 }
+        ],
+        bonds: [
+          ...CH3.map((_,i) => ({ a:'C', b:'CH3'+i, type:'single' })),
+          { a:'C', b:'O', type:'single' }
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 4 }]
+      }
+    ];
+  }
+
+  function sn2Data() {
+    const CH3 = { x: 510, y: 350 };
+    const CH2 = { x: 600, y: 350 };
+    const Br0 = { x: 830, y: 350 };
+    const OH0 = { O: { x: 280, y: 350 }, H: { x: 220, y: 350 } };
+
+    return [
+      {
+        label: 'TAHAP 1 — Reaktan: bromoetana + OH⁻',
+        narr: 'Karbon yang terikat Br memiliki muatan parsial positif (δ+). Ion OH⁻ kaya elektron dan bertindak sebagai nukleofil.',
+        atoms: [
+          { id:'C1', el:'C', x: CH3.x, y: CH3.y, charge: 0, label:'CH₃' },
+          { id:'C2', el:'C', x: CH2.x, y: CH2.y, charge: 0, label:'CH₂' },
+          { id:'Br', el:'Br', x: Br0.x, y: Br0.y, charge: 0, lp: 3 },
+          { id:'O', el:'O', x: OH0.O.x, y: OH0.O.y, charge: -1, lp: 3 },
+          { id:'H1', el:'H', x: OH0.H.x, y: OH0.H.y, charge: 0 },
+          { id:'H2', el:'H', x: 580, y: 280, charge: 0 },
+          { id:'H3', el:'H', x: 580, y: 420, charge: 0 },
+          { id:'H4', el:'H', x: 510, y: 280, charge: 0 },
+          { id:'H5', el:'H', x: 510, y: 420, charge: 0 },
+          { id:'H6', el:'H', x: 480, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'C1', b:'C2', type:'single' },
+          { a:'C2', b:'Br', type:'single' },
+          { a:'C2', b:'H2', type:'single' }, { a:'C2', b:'H3', type:'single' },
+          { a:'C1', b:'H4', type:'single' }, { a:'C1', b:'H5', type:'single' }, { a:'C1', b:'H6', type:'single' }
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 3 }, { id:'O', count: 3 }]
+      },
+      {
+        label: 'TAHAP 1 — Serangan backside & keadaan transisi',
+        narr: 'OH⁻ menyerang dari sisi belakang (berlawanan Br). Ikatan C–O mulai terbentuk, ikatan C–Br melemah. Terbentuk keadaan transisi.',
+        atoms: [
+          { id:'C1', el:'C', x: CH3.x, y: CH3.y, charge: 0, label:'CH₃' },
+          { id:'C2', el:'C', x: 640, y: 350, charge: 0, label:'CH₂' },
+          { id:'Br', el:'Br', x: 880, y: 350, charge: -1, lp: 4 },
+          { id:'O', el:'O', x: 480, y: 350, charge: -1, lp: 3 },
+          { id:'H1', el:'H', x: 420, y: 350, charge: 0 },
+          { id:'H2', el:'H', x: 560, y: 280, charge: 0 },
+          { id:'H3', el:'H', x: 560, y: 420, charge: 0 },
+          { id:'H4', el:'H', x: 510, y: 280, charge: 0 },
+          { id:'H5', el:'H', x: 510, y: 420, charge: 0 },
+          { id:'H6', el:'H', x: 480, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'C1', b:'C2', type:'single' },
+          { a:'C2', b:'Br', type:'dashed' },
+          { a:'C2', b:'O', type:'dashed' },
+          { a:'C2', b:'H2', type:'single' }, { a:'C2', b:'H3', type:'single' },
+          { a:'C1', b:'H4', type:'single' }, { a:'C1', b:'H5', type:'single' }, { a:'C1', b:'H6', type:'single' }
+        ],
+        arrows: [
+          { from:'O', to:'C2', kind:'pair' },
+          { from:'C2-Br', to:'Br', kind:'pair' }
+        ],
+        lp: [{ id:'Br', count: 4 }, { id:'O', count: 3 }]
+      },
+      {
+        label: 'TAHAP 2 — Produk: etanol + Br⁻',
+        narr: 'Ikatan C–O terbentuk sempurna dan Br⁻ terlepas. Reaksi SN2 berlangsung dalam satu tahap concerted tanpa intermediat.',
+        atoms: [
+          { id:'C1', el:'C', x: CH3.x, y: CH3.y, charge: 0, label:'CH₃' },
+          { id:'C2', el:'C', x: 620, y: 350, charge: 0, label:'CH₂' },
+          { id:'Br', el:'Br', x: 1000, y: 350, charge: -1, lp: 4 },
+          { id:'O', el:'O', x: 500, y: 350, charge: 0, lp: 2 },
+          { id:'H1', el:'H', x: 440, y: 350, charge: 0 },
+          { id:'H2', el:'H', x: 620, y: 280, charge: 0 },
+          { id:'H3', el:'H', x: 620, y: 420, charge: 0 },
+          { id:'H4', el:'H', x: 510, y: 280, charge: 0 },
+          { id:'H5', el:'H', x: 510, y: 420, charge: 0 },
+          { id:'H6', el:'H', x: 480, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'C1', b:'C2', type:'single' },
+          { a:'C2', b:'O', type:'single' },
+          { a:'C2', b:'H2', type:'single' }, { a:'C2', b:'H3', type:'single' },
+          { a:'C1', b:'H4', type:'single' }, { a:'C1', b:'H5', type:'single' }, { a:'C1', b:'H6', type:'single' }
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 4 }, { id:'O', count: 2 }]
+      }
+    ];
+  }
+
+  function se1Data() {
+    const C0 = { x: 700, y: 350 };
+    const Mg0 = { x: 830, y: 350 };
+    const Br0 = { x: 920, y: 350 };
+    const R = [{ x: 620, y: 280 }, { x: 600, y: 420 }, { x: 550, y: 350 }];
+    const Hp0 = { x: 280, y: 350 };
+
+    return [
+      {
+        label: 'TAHAP 1 — Reaktan: R–MgBr + H⁺',
+        narr: 'Ikatan C–Mg sangat polar. Karbon kaya elektron (δ−) karena Mg kurang elektronegatif. H⁺ adalah elektrofil.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Mg', el:'Mg', x: Mg0.x, y: Mg0.y, charge: 0 },
+          { id:'Br', el:'Br', x: Br0.x, y: Br0.y, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: Hp0.x, y: Hp0.y, charge: +1 }
+        ],
+        bonds: [
+          { a:'C', b:'Mg', type:'single' },
+          { a:'Mg', b:'Br', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 3 }]
+      },
+      {
+        label: 'TAHAP 1 — Pemutusan heterolitik C–Mg',
+        narr: 'Pasangan elektron ikatan C–Mg bergerak menuju karbon, membentuk karbanion R⁻ (intermediat). MgBr⁺ terpisah.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: -1, lp: 1 },
+          { id:'Mg', el:'Mg', x: 900, y: 300, charge: +1 },
+          { id:'Br', el:'Br', x: 980, y: 300, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: Hp0.x, y: Hp0.y, charge: +1 }
+        ],
+        bonds: [
+          { a:'Mg', b:'Br', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [{ from:'C-Mg', to:'C', kind:'pair' }],
+        lp: [{ id:'C', count: 1 }, { id:'Br', count: 3 }]
+      },
+      {
+        label: 'TAHAP 2 — Serangan elektrofil H⁺',
+        narr: 'Pasangan elektron bebas karbanion menyerang H⁺, membentuk ikatan C–H. Karbon bertindak sebagai donor elektron.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Mg', el:'Mg', x: 900, y: 300, charge: +1 },
+          { id:'Br', el:'Br', x: 980, y: 300, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: 600, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'Mg', b:'Br', type:'single' },
+          { a:'C', b:'Hp', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [{ from:'C', to:'Hp', kind:'pair' }],
+        lp: [{ id:'Br', count: 3 }]
+      }
+    ];
+  }
+
+  function se2Data() {
+    const C0 = { x: 700, y: 350 };
+    const Mg0 = { x: 830, y: 350 };
+    const Br0 = { x: 920, y: 350 };
+    const R = [{ x: 620, y: 280 }, { x: 600, y: 420 }, { x: 550, y: 350 }];
+    const Hp0 = { x: 280, y: 350 };
+
+    return [
+      {
+        label: 'TAHAP 1 — Reaktan: R–MgBr + H⁺',
+        narr: 'Elektrofil H⁺ mendekati karbon. Ikatan C–Mg akan terputus bersamaan dengan pembentukan C–H (concerted).',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Mg', el:'Mg', x: Mg0.x, y: Mg0.y, charge: 0 },
+          { id:'Br', el:'Br', x: Br0.x, y: Br0.y, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: Hp0.x, y: Hp0.y, charge: +1 }
+        ],
+        bonds: [
+          { a:'C', b:'Mg', type:'single' },
+          { a:'Mg', b:'Br', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 3 }]
+      },
+      {
+        label: 'TAHAP 1 — Keadaan transisi concerted',
+        narr: 'Satu tahap: C–H terbentuk sementara C–Mg terputus. Tidak ada karbanion bebas sebagai intermediat.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Mg', el:'Mg', x: 880, y: 320, charge: 0 },
+          { id:'Br', el:'Br', x: 960, y: 320, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: 620, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'C', b:'Mg', type:'dashed' },
+          { a:'C', b:'Hp', type:'dashed' },
+          { a:'Mg', b:'Br', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [{ from:'C-Mg', to:'Hp', kind:'pair' }],
+        lp: [{ id:'Br', count: 3 }]
+      },
+      {
+        label: 'TAHAP 2 — Produk: R–H + MgBr⁺',
+        narr: 'Ikatan C–H terbentuk sempurna, MgBr⁺ terlepas. Reaksi SE2 berlangsung satu tahap tanpa intermediat karbanion.',
+        atoms: [
+          { id:'C', el:'C', x: C0.x, y: C0.y, charge: 0 },
+          { id:'Mg', el:'Mg', x: 980, y: 300, charge: +1 },
+          { id:'Br', el:'Br', x: 1060, y: 300, charge: 0, lp: 3 },
+          ...R.map((p,i) => ({ id:'R'+i, el:'C', x:p.x, y:p.y, charge: 0, label:'R' })),
+          { id:'Hp', el:'H', x: 620, y: 350, charge: 0 }
+        ],
+        bonds: [
+          { a:'C', b:'Hp', type:'single' },
+          { a:'Mg', b:'Br', type:'single' },
+          ...R.map((_,i) => ({ a:'C', b:'R'+i, type:'single' }))
+        ],
+        arrows: [],
+        lp: [{ id:'Br', count: 3 }]
+      }
+    ];
+  }
+
+  function loadMech(mech) {
+    currentMech = mech;
+    stages = getMechData(mech);
+    stage = 0;
+    stageProgress = 0;
+    applyStage(0);
+    updateModeUI();
+    updateNarration();
+  }
+
+  function applyStage(idx) {
+    if (idx < 0) idx = 0;
+    if (idx >= stages.length) idx = stages.length - 1;
+    stage = idx;
+    const s = stages[idx];
+    atoms = JSON.parse(JSON.stringify(s.atoms));
+    bonds = JSON.parse(JSON.stringify(s.bonds));
+    arrows = JSON.parse(JSON.stringify(s.arrows || []));
+    charges = atoms.filter(a => a.charge && a.charge !== 0).map(a => ({ id: a.id, charge: a.charge }));
+    stageLabel.textContent = s.label;
+    mechDesc.textContent = s.narr;
+    narrationText.textContent = s.narr;
+    narrationBar.querySelector('i').textContent = 'TAHAP ' + (idx + 1);
+    if (currentMech === 'sn1') {
+      mechStatus.textContent = 'Mekanisme: SN1 (bertahap)';
+      energyInfo.textContent = 'ΔG‡ tinggi · intermediat karbokation';
+    } else if (currentMech === 'sn2') {
+      mechStatus.textContent = 'Mekanisme: SN2 (concerted)';
+      energyInfo.textContent = 'Satu puncak · keadaan transisi';
+    } else if (currentMech === 'se1') {
+      mechStatus.textContent = 'Mekanisme: SE1 (bertahap)';
+      energyInfo.textContent = 'Intermediat karbanion';
+    } else if (currentMech === 'se2') {
+      mechStatus.textContent = 'Mekanisme: SE2 (concerted)';
+      energyInfo.textContent = 'Satu puncak · tanpa intermediat';
+    }
+    drawScene();
+  }
+
+  function updateModeUI() {
+    modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mech === currentMech));
+  }
+
+  function updateNarration() {
+    if (stage < stages.length) {
+      narrationText.textContent = stages[stage].narr;
+      narrationBar.querySelector('i').textContent = 'TAHAP ' + (stage + 1);
+    }
+  }
+
+  function drawScene() {
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#f2faff');
+    bg.addColorStop(0.5, '#dff0fb');
+    bg.addColorStop(1, '#b8d6ec');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(150,190,220,0.12)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    ctx.font = 'bold 26px "Segoe UI"';
+    ctx.fillStyle = '#0e3a55';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.fillText(mechLabel(currentMech), 40, 60);
+    ctx.shadowBlur = 0;
+
+    bonds.forEach(b => drawBond(b));
+    atoms.forEach(a => drawAtom(a));
+    (stages[stage].lp || []).forEach(lp => drawLonePairs(lp));
+    arrows.forEach(arr => drawArrow(arr));
+    charges.forEach(c => drawCharge(c));
+
+    ctx.font = 'bold 16px "Segoe UI"';
+    ctx.fillStyle = '#1e4a68';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tahap ' + (stage + 1) + ' dari ' + stages.length, W/2, H - 30);
+    ctx.textAlign = 'left';
+  }
+
+  function mechLabel(m) {
+    return { sn1: 'SN1 — Substitusi Nukleofilik Unimolekuler',
+             sn2: 'SN2 — Substitusi Nukleofilik Bimolekuler',
+             se1: 'SE1 — Substitusi Elektrofilik Unimolekuler',
+             se2: 'SE2 — Substitusi Elektrofilik Bimolekuler' }[m] || m;
+  }
+
+  function drawAtom(a) {
+    const col = ATOM_COLORS[a.el] || ATOM_COLORS.C;
+    const r = atomRadius(a.el);
+
+    ctx.beginPath();
+    ctx.arc(a.x + 3, a.y + 4, r, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(10,30,50,0.25)';
+    ctx.fill();
+
+    const g = ctx.createRadialGradient(a.x - r*0.35, a.y - r*0.35, r*0.1, a.x, a.y, r*1.1);
+    g.addColorStop(0, col.light);
+    g.addColorStop(0.5, col.fill);
+    g.addColorStop(1, col.edge);
+    ctx.beginPath();
+    ctx.arc(a.x, a.y, r, 0, Math.PI*2);
+    ctx.fillStyle = g;
+    ctx.shadowColor = col.edge + '88';
+    ctx.shadowBlur = 16;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(a.x - r*0.35, a.y - r*0.35, r*0.3, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(a.x, a.y, r, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = 'bold ' + (a.label ? Math.max(11, r*0.75) : Math.max(12, r*0.9)) + 'px "Segoe UI"';
+    ctx.fillStyle = (a.el === 'H' || a.el === 'F') ? '#1a2a38' : '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const txt = a.label || a.el;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(txt, a.x, a.y + 1);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawBond(b) {
+    const A = atoms.find(a => a.id === b.a);
+    const B = atoms.find(a => a.id === b.b);
+    if (!A || !B) return;
+
+    const dx = B.x - A.x, dy = B.y - A.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 1) return;
+    const ux = dx/len, uy = dy/len;
+    const rA = atomRadius(A.el), rB = atomRadius(B.el);
+    const x1 = A.x + ux * rA, y1 = A.y + uy * rA;
+    const x2 = B.x - ux * rB, y2 = B.y - uy * rB;
+
+    ctx.save();
+    if (b.type === 'dashed') {
+      ctx.setLineDash([8, 6]);
+      ctx.strokeStyle = 'rgba(80,80,80,0.7)';
+      ctx.lineWidth = 4;
+    } else {
+      ctx.strokeStyle = '#4a4a4a';
+      ctx.lineWidth = 6;
+    }
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    if (b.type !== 'dashed') {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawLonePairs(lp) {
+    const atom = atoms.find(a => a.id === lp.id);
+    if (!atom) return;
+    const r = atomRadius(atom.el);
+    for (let i = 0; i < lp.count; i++) {
+      const ang = (i * 1.2 + 0.3) - Math.PI/2;
+      const px = atom.x + Math.cos(ang) * (r + 8);
+      const py = atom.y + Math.sin(ang) * (r + 8);
+      ctx.beginPath();
+      ctx.arc(px - 4, py, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = '#2a7be0';
+      ctx.shadowColor = '#2a7be0';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px + 4, py, 3.5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function drawArrow(arr) {
+    let fromPos = null, toPos = null;
+    if (arr.from.includes('-')) {
+      const [a, b] = arr.from.split('-');
+      const A = atoms.find(x => x.id === a);
+      const B = atoms.find(x => x.id === b);
+      if (A && B) fromPos = { x: (A.x + B.x)/2, y: (A.y + B.y)/2 };
+    } else {
+      const A = atoms.find(x => x.id === arr.from);
+      if (A) fromPos = { x: A.x, y: A.y };
+    }
+    if (arr.to.includes('-')) {
+      const [a, b] = arr.to.split('-');
+      const A = atoms.find(x => x.id === a);
+      const B = atoms.find(x => x.id === b);
+      if (A && B) toPos = { x: (A.x + B.x)/2, y: (A.y + B.y)/2 };
+    } else {
+      const B = atoms.find(x => x.id === arr.to);
+      if (B) toPos = { x: B.x, y: B.y };
+    }
+    if (!fromPos || !toPos) return;
+
+    const dx = toPos.x - fromPos.x, dy = toPos.y - fromPos.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 10) return;
+    const mx = (fromPos.x + toPos.x)/2 + dy*0.22;
+    const my = (fromPos.y + toPos.y)/2 - dx*0.22;
+
+    ctx.save();
+    ctx.strokeStyle = '#e63946';
+    ctx.fillStyle = '#e63946';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#e63946';
+    ctx.shadowBlur = 10;
+
+    ctx.beginPath();
+    ctx.moveTo(fromPos.x, fromPos.y);
+    ctx.quadraticCurveTo(mx, my, toPos.x, toPos.y);
+    ctx.stroke();
+
+    const t = 0.92;
+    const tanX = 2*(1-t)*(mx - fromPos.x) + 2*t*(toPos.x - mx);
+    const tanY = 2*(1-t)*(my - fromPos.y) + 2*t*(toPos.y - my);
+    const ang = Math.atan2(tanY, tanX);
+    const aSize = 14;
+    ctx.beginPath();
+    ctx.moveTo(toPos.x, toPos.y);
+    ctx.lineTo(toPos.x - aSize*Math.cos(ang - 0.4), toPos.y - aSize*Math.sin(ang - 0.4));
+    ctx.lineTo(toPos.x - aSize*Math.cos(ang + 0.4), toPos.y - aSize*Math.sin(ang + 0.4));
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(fromPos.x, fromPos.y, 5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCharge(c) {
+    const a = atoms.find(x => x.id === c.id);
+    if (!a) return;
+    const r = atomRadius(a.el);
+    const px = a.x + r*0.85, py = a.y - r*0.85;
+    ctx.font = 'bold 20px "Segoe UI"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = c.charge > 0 ? '#e63946' : '#2a7be0';
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = 6;
+    const sym = c.charge > 0 ? '+' : '−';
+    ctx.fillText(sym, px, py);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function animate(ts) {
+    if (!animating || paused) { raf = null; return; }
+    if (!lastTs) lastTs = ts;
+    let dt = Math.min(0.05, (ts - lastTs)/1000) * speedFactor;
+    lastTs = ts;
+    tick += dt * 60;
+
+    stageProgress += dt / STAGE_DURATION;
+    if (stageProgress >= 1) {
+      if (stage < stages.length - 1) {
+        applyStage(stage + 1);
+        stageProgress = 0;
+        updateNarration();
+      } else {
+        stageProgress = 1;
+        animating = false;
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        narrationText.textContent = 'Simulasi selesai. Tekan ULANGI untuk mengulang.';
+        narrationBar.querySelector('i').textContent = 'SELESAI';
+      }
+    }
+    drawScene();
+    raf = requestAnimationFrame(animate);
+  }
+
+  modeBtns.forEach(b => {
+    b.addEventListener('click', () => {
+      if (animating) {
+        animating = false; paused = false;
+        if (raf) cancelAnimationFrame(raf); raf = null;
+        startBtn.disabled = false;
+        pauseBtn.disabled = false;
+        pauseBtn.textContent = '⏸ JEDA';
+      }
+      loadMech(b.dataset.mech);
+      infoPopup.textContent = 'Mekanisme: ' + b.dataset.mech.toUpperCase();
+    });
+  });
+
+  startBtn.addEventListener('click', () => {
+    if (!animating) {
+      animating = true; paused = false;
+      lastTs = 0;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      infoPopup.textContent = 'Simulasi berjalan...';
+    }
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if (animating && !paused) {
+      paused = true;
+      pauseBtn.textContent = '▶ LANJUT';
+      infoPopup.textContent = 'Dijeda';
+    } else if (paused) {
+      paused = false; lastTs = 0;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+      pauseBtn.textContent = '⏸ JEDA';
+      infoPopup.textContent = 'Melanjutkan...';
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (raf) cancelAnimationFrame(raf); raf = null;
+    animating = false; paused = false;
+    stageProgress = 0;
+    applyStage(0);
+    updateNarration();
+    startBtn.disabled = false;
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = '⏸ JEDA';
+    infoPopup.textContent = 'Simulasi diulang';
+  });
+
+  stepBack.addEventListener('click', () => {
+    if (raf) cancelAnimationFrame(raf); raf = null;
+    animating = false; paused = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = false;
+    applyStage(Math.max(0, stage - 1));
+    updateNarration();
+  });
+
+  stepFwd.addEventListener('click', () => {
+    if (raf) cancelAnimationFrame(raf); raf = null;
+    animating = false; paused = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = false;
+    applyStage(Math.min(stages.length - 1, stage + 1));
+    updateNarration();
+  });
+
+  speedUp.addEventListener('click', () => {
+    speedFactor = Math.min(3.0, +(speedFactor + 0.3).toFixed(1));
+    speedLabel.textContent = speedFactor.toFixed(1) + 'x';
+  });
+  speedDown.addEventListener('click', () => {
+    speedFactor = Math.max(0.3, +(speedFactor - 0.3).toFixed(1));
+    speedLabel.textContent = speedFactor.toFixed(1) + 'x';
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    for (let a of atoms) {
+      const r = atomRadius(a.el);
+      if (Math.hypot(mx - a.x, my - a.y) < r) {
+        const el = a.el;
+        const val = { C: 4, H: 1, O: 6, N: 5, Br: 7, Cl: 7, Mg: 2, I: 7, F: 7 }[el] || '?';
+        atomInfo.innerHTML = `<b>${a.label || el}</b> · Valensi ${val} · Muatan formal: <b style="color:${a.charge>0?'#e63946':a.charge<0?'#2a7be0':'#0e3a55'}">${a.charge>0?'+'+a.charge:a.charge<0?a.charge:'0'}</b> · Pasangan bebas: ${(stages[stage].lp||[]).filter(l=>l.id===a.id).reduce((s,l)=>s+l.count,0)}`;
+        infoPopup.textContent = `Atom ${el} dipilih`;
+        return;
+      }
+    }
+
+    for (let b of bonds) {
+      const A = atoms.find(x => x.id === b.a);
+      const B = atoms.find(x => x.id === b.b);
+      if (!A || !B) continue;
+      const mxB = (A.x + B.x)/2, myB = (A.y + B.y)/2;
+      if (Math.hypot(mx - mxB, my - myB) < 22) {
+        atomInfo.innerHTML = `<b>Ikatan ${A.label||A.el}–${B.label||B.el}</b> · Tipe: ${b.type === 'dashed' ? 'sedang terbentuk/terputus' : 'kovalen tunggal'} · Polaritas: ${A.el === B.el ? 'nonpolar' : 'polar'}`;
+        infoPopup.textContent = 'Ikatan dipilih';
+        return;
+      }
+    }
+
+    infoPopup.textContent = 'Klik atom/ikatan untuk info';
+  });
+
+  loadMech('sn1');
+})();
+</script>
+</body>
+</html>
